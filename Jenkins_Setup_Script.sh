@@ -10,3 +10,5 @@ sudo systemctl enable jenkins
 sudo systemctl start jenkins
 yum install git -y
 yum install java -y
+yum install maven -y
+mount -o remount,size=4G /tmp
