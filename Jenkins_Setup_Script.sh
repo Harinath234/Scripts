@@ -8,4 +8,5 @@ sudo yum install java-21-amazon-corretto -y
 sudo yum install jenkins -y
 sudo systemctl enable jenkins
 sudo systemctl start jenkins
-
+yum install git -y
+yum install java -y
