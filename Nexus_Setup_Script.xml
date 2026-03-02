@@ -1,0 +1,31 @@
+sudo yum update -y
+sudo yum install wget -y
+sudo yum install java-17 -y
+sudo mkdir /app && cd /app
+sudo wget https://download.sonatype.com/nexus/3/nexus-3.89.1-02-linux-x86_64.tar.gz
+sudo tar -xvf nexus-3.89.1-02-linux-x86_64.tar.gz
+mv nexus-3.89.1-02 nexus
+sudo adduser nexus
+sudo chown -R nexus:nexus nexus
+sudo chown -R nexus:nexus sonatype-work/
+echo 'run_as_user="nexus"' | sudo tee -a /app/nexus/bin/nexus.rc
+sudo tee /etc/systemd/system/nexus.service > /dev/null <<EOF
+[Unit]
+Description=Nexus service
+After=network.target
+
+[Service]
+Type=forking
+LimitNOFILE=65536
+User=nexus
+Group=nexus
+ExecStart=/app/nexus/bin/nexus start
+ExecStop=/app/nexus/bin/nexus stop
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo chkconfig nexus on
+sudo systemctl start nexus
+sudo systemctl status nexus
