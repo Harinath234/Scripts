@@ -18,3 +18,30 @@ sudo echo '<?xml version="1.0" encoding="utf-8"?>
         </tomcat-users>' > tomcat-users.xml
 
 sudo /opt/apache-tomcat-9.0.115/bin/startup.sh
+
+sudo useradd tomcat
+sudo chown -R tomcat:tomcat /opt/apache-tomcat-9.0.115
+
+sudo tee /etc/systemd/system/tomcat.service > /dev/null <<EOF
+[Unit]
+Description=Apache Tomcat Web Application Container
+After=network.target
+
+[Service]
+Type=forking
+
+User=root
+Group=root
+
+Environment=JAVA_HOME=/usr/lib/jvm/java
+Environment=CATALINA_HOME=/opt/apache-tomcat-9.0.115
+Environment=CATALINA_BASE=/opt/apache-tomcat-9.0.115
+
+ExecStart=/opt/apache-tomcat-9.0.115/bin/startup.sh
+ExecStop=/opt/apache-tomcat-9.0.115/bin/shutdown.sh
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
