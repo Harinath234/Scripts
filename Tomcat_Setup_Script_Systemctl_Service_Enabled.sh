@@ -45,3 +45,8 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable tomcat
+sudo systemctl start tomcat
+sudo systemctl status tomcat
