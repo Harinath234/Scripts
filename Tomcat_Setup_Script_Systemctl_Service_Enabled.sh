@@ -1,26 +1,38 @@
 #!/bin/bash
-sudo yum install java -y
+
+sudo yum install -y java-17-amazon-corretto-devel wget
+
+JAVA_HOME=/usr/lib/jvm/java-17-amazon-corretto
+echo "Using JAVA_HOME=$JAVA_HOME"
+
 cd /opt
+sudo wget -q https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.115/bin/apache-tomcat-9.0.115.tar.gz
+sudo tar -xzf apache-tomcat-9.0.115.tar.gz
+sudo mv apache-tomcat-9.0.115 tomcat
+sudo rm -f apache-tomcat-9.0.115.tar.gz
 
-sudo wget https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.115/bin/apache-tomcat-9.0.115.tar.gz
-sudo tar -xvf /opt/apache-tomcat-9.0.115.tar.gz
+cd /opt/tomcat/conf
+sudo mv tomcat-users.xml tomcat-users_bkup.xml 2>/dev/null
 
-cd /opt/apache-tomcat-9.0.115/webapps/manager/META-INF
+sudo tee tomcat-users.xml > /dev/null <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<tomcat-users>
+  <role rolename="manager-gui"/>
+  <role rolename="manager-script"/>
+  <role rolename="manager-status"/>
+  <user username="tomcat" password="tomcat" roles="manager-gui,manager-script,manager-status"/>
+</tomcat-users>
+EOF
+
+cd /opt/tomcat/webapps/manager/META-INF
 sudo sed -i '/CookieProcessor/,/HashMap"\/>/d' context.xml
 
-cd /opt/apache-tomcat-9.0.115/conf
-sudo mv tomcat-users.xml tomcat-users_bkup.xml
-sudo touch tomcat-users.xml
-sudo echo '<?xml version="1.0" encoding="utf-8"?>
-        <tomcat-users>
-        <role rolename="manager-gui"/>
-        <user username="tomcat" password="tomcat" roles="manager-gui, manager-script, manager-status"/>
-        </tomcat-users>' > tomcat-users.xml
 
-sudo /opt/apache-tomcat-9.0.115/bin/startup.sh
+sudo userdel -r tomcat 2>/dev/null || true  # remove old user if exists
+sudo useradd -r -m -U -d /opt/tomcat -s /bin/false tomcat
+sudo chown -R tomcat:tomcat /opt/tomcat
+sudo chmod +x /opt/tomcat/bin/*.sh
 
-sudo useradd tomcat
-sudo chown -R tomcat:tomcat /opt/apache-tomcat-9.0.115
 
 sudo tee /etc/systemd/system/tomcat.service > /dev/null <<EOF
 [Unit]
@@ -29,22 +41,21 @@ After=network.target
 
 [Service]
 Type=forking
-
-User=root
-Group=root
-
-Environment=JAVA_HOME=/usr/lib/jvm/java
-Environment=CATALINA_HOME=/opt/apache-tomcat-9.0.115
-Environment=CATALINA_BASE=/opt/apache-tomcat-9.0.115
-
-ExecStart=/opt/apache-tomcat-9.0.115/bin/startup.sh
-ExecStop=/opt/apache-tomcat-9.0.115/bin/shutdown.sh
-
+User=tomcat
+Group=tomcat
+Environment=JAVA_HOME=$JAVA_HOME
+Environment=CATALINA_HOME=/opt/tomcat
+Environment=CATALINA_BASE=/opt/tomcat
+Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid
+ExecStart=/opt/tomcat/bin/startup.sh
+ExecStop=/opt/tomcat/bin/shutdown.sh
 Restart=always
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
 EOF
+
 
 sudo systemctl daemon-reload
 sudo systemctl enable tomcat
