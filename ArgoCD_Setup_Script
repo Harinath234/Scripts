@@ -1,3 +1,8 @@
+Create Cluster:
+
+eksctl create cluster --name testcluster --nodegroup-name testng --node-type t3.micro --nodes 7 --managed
+
+
 ARGOCD : 
 
 kubectl create namespace argocd
