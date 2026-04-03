@@ -2,7 +2,7 @@ sudo yum update -y
 
 sudo yum install -y wget rpm
 
-rpm -ivh https://github.com/aquasecurity/trivy/releases/download/v0.67.0/trivy_0.67.0_Linux-64bit.rpm
+rpm -ivh https://github.com/aquasecurity/trivy/releases/download/v0.69.3/trivy_0.69.3_Linux-64bit.rpm
 
 
 # TRIVY Official page:- https://github.com/aquasecurity/trivy/
